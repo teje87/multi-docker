@@ -1,0 +1,23 @@
+sudo: required
+language: generic
+services: 
+  - docker
+
+before_install:
+  - docker build -t teje87/react-test -f ./client/Dockerfile.dev ./client
+  
+script:
+  - docker run -e CI=true teje87/react-test npm test
+
+after_success:
+  - docker build -t teje87/multi-client ./client
+  - docker build -t teje87/multi-nginx ./nginx
+  - docker build -t teje87/multi-server ./server
+  - docker build -t teje87/multi-worker ./worker
+  # Log in to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take the images and push them to docker hub
+  - docker push teje87/multi-client 
+  - docker push teje87/multi-nginx 
+  - docker push teje87/multi-server 
+  - docker push teje87/multi-worker 
